@@ -1,9 +1,12 @@
 name: Build, Package, and Release
 
 on:
-  push:
-    tags:
-      - "v*"
+  workflow_dispatch:
+    inputs:
+      release_tag:
+        description: 'Tag for the release (e.g., v1.0.0)'
+        required: true
+        default: 'v0.0.0'
 
 jobs:
   build-and-package:
@@ -28,14 +31,14 @@ jobs:
       - name: Package extension
         run: |
           cd dist
-          zip -r ../ronet-${{ github.ref_name }}.zip .
+          zip -r ../ronet-${{ github.event.inputs.release_tag }}.zip .
 
       - name: Create GitHub Release
         id: create_release
         uses: actions/create-release@v1
         with:
-          tag_name: ${{ github.ref_name }}
-          release_name: Release ${{ github.ref_name }}
+          tag_name: ${{ github.event.inputs.release_tag }}
+          release_name: Release ${{ github.event.inputs.release_tag }}
           draft: false
           prerelease: false
         env:
@@ -45,8 +48,8 @@ jobs:
         uses: actions/upload-release-asset@v1
         with:
           upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: ./ronet-${{ github.ref_name }}.zip
-          asset_name: ronet-${{ github.ref_name }}.zip
+          asset_path: ./ronet-${{ github.event.inputs.release_tag }}.zip
+          asset_name: ronet-${{ github.event.inputs.release_tag }}.zip
           asset_content_type: application/zip
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
