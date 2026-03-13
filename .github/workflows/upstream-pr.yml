@@ -41,13 +41,12 @@ jobs:
 
     - name: Push branch
       run: |
-        git push https://${{ secrets.GITHUB_TOKEN }}@github.com/netcodev/RoNet.git upstream-update --force
+        git push origin upstream-update --force
 
     - name: Create Pull Request
       uses: peter-evans/create-pull-request@v5
       with:
         token: ${{ secrets.GITHUB_TOKEN }}
-        commit-message: "Merge updates from RoValra"
         branch: upstream-update
         base: main
         title: "Updates from RoValra"
