@@ -1,4 +1,4 @@
-name: Update from RoValra
+name: Sync from RoValra
 
 on:
   schedule:
@@ -9,11 +9,10 @@ permissions:
   contents: write
 
 jobs:
-  update:
+  sync:
     runs-on: ubuntu-latest
-
     steps:
-    - name: Checkout repo
+    - name: Checkout your repo
       uses: actions/checkout@v3
       with:
         fetch-depth: 0
@@ -23,24 +22,24 @@ jobs:
         git config user.name "github-actions[bot]"
         git config user.email "github-actions[bot]@users.noreply.github.com"
 
-    - name: Add upstream
+    - name: Add upstream and fetch
       run: |
         git remote remove upstream || true
         git remote add upstream https://github.com/NotValra/RoValra.git
         git fetch upstream main
 
-    - name: Create/update branch from main
+    - name: Create PR branch from main
       run: git checkout -B upstream-update main
 
-    - name: Merge upstream changes (excluding workflows)
+    - name: Sync upstream files (exclude workflows)
       run: |
-        git merge upstream/main --allow-unrelated-histories -X theirs --no-commit || true
+        git checkout upstream/main -- .
         git reset HEAD .github/workflows/*.yml
         git checkout -- .github/workflows/*.yml || true
         git add -A
-        git commit -m "Merge updates from RoValra (excluding workflows)" || echo "No changes to commit"
+        git commit -m "Sync updates from RoValra (excluding workflows)" || echo "No upstream changes"
 
-    - name: Push branch
+    - name: Push PR branch
       run: git push origin upstream-update --force
 
     - name: Create Pull Request
@@ -49,8 +48,8 @@ jobs:
         token: ${{ secrets.GITHUB_TOKEN }}
         branch: upstream-update
         base: main
-        title: "Updates from RoValra"
-        body: "This PR merges the latest changes from the original RoValra repository (workflow files ignored)."
+        title: "Sync updates from RoValra"
+        body: "This PR includes all updates from the original RoValra repository. You can review changes, restored files, and updates before merging."
         labels: "upstream"
         delete-branch: false
         merge-method: squash
