@@ -39,22 +39,33 @@ jobs:
           zip -r ../ronet-${{ github.event.inputs.release_tag }}.zip .
 
       - name: Get previous release tag
-        id: prev
         run: |
           PREV_TAG=$(git tag --sort=-creatordate | sed -n '2p')
           echo "PREV_TAG=$PREV_TAG" >> $GITHUB_ENV
           echo "Previous tag: $PREV_TAG"
 
-      - name: Generate changelog
+      - name: Generate technical changelog
         run: |
           if [ -z "$PREV_TAG" ]; then
-            CHANGELOG=$(git log --pretty=format:"- %s")
+            RANGE="HEAD"
           else
-            CHANGELOG=$(git log $PREV_TAG..HEAD --pretty=format:"- %s")
+            RANGE="$PREV_TAG..HEAD"
           fi
 
+          {
+            echo "### Commits"
+            git log $RANGE \
+              --pretty=format:"- %h | %ad | %an | %s" \
+              --date=short
+
+            echo ""
+            echo ""
+            echo "### Diffstat"
+            git diff --stat $RANGE
+          } > changelog.txt
+
           echo "CHANGELOG<<EOF" >> $GITHUB_ENV
-          echo "$CHANGELOG" >> $GITHUB_ENV
+          cat changelog.txt >> $GITHUB_ENV
           echo "EOF" >> $GITHUB_ENV
 
       - name: Create GitHub Release
@@ -63,9 +74,7 @@ jobs:
         with:
           tag_name: ${{ github.event.inputs.release_tag }}
           release_name: Release ${{ github.event.inputs.release_tag }}
-          body: |
-            ## Changelog
-            ${{ env.CHANGELOG }}
+          body: ${{ env.CHANGELOG }}
           draft: false
           prerelease: false
         env:
