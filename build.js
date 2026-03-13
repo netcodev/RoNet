@@ -132,6 +132,12 @@ if (sass && fs.existsSync(cssDir)) {
 let dracoSource = '';
 if (fs.existsSync(dracoPath)) {
     dracoSource = fs.readFileSync(dracoPath, 'utf8');
+} else {
+    dracoSource = `
+var DracoDecoderModule = (() => {
+  return () => Promise.reject(new Error("Missing module dependency: draco_decoder.js"));
+})();
+`;
 }
 
 esbuild
