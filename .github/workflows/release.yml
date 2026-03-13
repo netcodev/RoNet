@@ -79,7 +79,13 @@ jobs:
 
       - name: Generate release body
         run: |
+          ACTOR="${{ github.actor }}"
+
+          USER_ID=$(curl -s https://api.github.com/users/$ACTOR | jq -r .id)
+
           echo "https://github.com/${{ github.repository }}/compare/${{ env.LAST_TAG }}...${{ env.NEW_TAG }}" >> release.txt
+          echo "" >> release.txt
+          echo "_Signed-off-by: $ACTOR <$USER_ID+$ACTOR@users.noreply.github.com>_" >> release.txt
 
       - name: Create GitHub Release
         id: create_release
