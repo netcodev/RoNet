@@ -31,11 +31,10 @@ jobs:
     - name: Fetch upstream
       run: git fetch upstream
 
-    - name: Create/update upstream-update branch (excluding workflows)
+    - name: Create/update upstream-update branch
       run: |
         git checkout -B upstream-update
-        # Merge upstream/main, auto-resolve conflicts, but skip workflow files
-        git merge upstream/main --allow-unrelated-histories -X theirs --no-commit
+        git merge upstream/main --allow-unrelated-histories -X theirs --squash
         git reset HEAD .github/workflows/*.yml
         git checkout -- .github/workflows/*.yml || true
         git commit -m "Merge updates from RoValra (excluding workflows)"
@@ -55,3 +54,4 @@ jobs:
         body: "This PR merges the latest changes from the original RoValra repository (workflow files ignored)."
         labels: "upstream"
         delete-branch: false
+        merge-method: squash
