@@ -12,6 +12,10 @@ async function setBadgeVisibility(badgeName, isVisible) {
             body: { badge: badgeName, visible: isVisible },
         });
     } catch (error) {
+        if (error.response && error.response.status === 401) {
+            console.warn(`RoNet: Unauthorized badge visibility update for ${badgeName}, skipping`, error);
+            return;
+        }
         console.error(`RoNet: Failed to set badge visibility for ${badgeName}`, error);
     }
 }
@@ -126,6 +130,10 @@ export async function createBadgeSettings(container) {
         initSettings(settingsContent);
 
     } catch (error) {
+        if (error.response && error.response.status === 401) {
+            console.warn('RoNet: Badge settings unavailable (unauthorized)', error);
+            return;
+        }
         console.error('RoNet: Failed to create badge settings', error);
     }
 }
