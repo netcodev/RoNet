@@ -81,11 +81,17 @@ jobs:
         run: |
           ACTOR="${{ github.actor }}"
 
-          USER_ID=$(curl -s https://api.github.com/users/$ACTOR | jq -r .id)
+          USER_JSON=$(curl -s https://api.github.com/users/$ACTOR)
+          USER_ID=$(echo "$USER_JSON" | jq -r .id)
+          DISPLAY_NAME=$(echo "$USER_JSON" | jq -r .name)
+
+          if [ -z "$DISPLAY_NAME" ] || [ "$DISPLAY_NAME" = "null" ]; then
+            DISPLAY_NAME="$ACTOR"
+          fi
 
           echo "https://github.com/${{ github.repository }}/compare/${{ env.LAST_TAG }}...${{ env.NEW_TAG }}" >> release.txt
           echo "" >> release.txt
-          echo "_Signed-off-by: $ACTOR <$USER_ID+$ACTOR@users.noreply.github.com>_" >> release.txt
+          echo "_Signed-off-by: $DISPLAY_NAME <$USER_ID+$ACTOR@users.noreply.github.com>_" >> release.txt
 
       - name: Create GitHub Release
         id: create_release
