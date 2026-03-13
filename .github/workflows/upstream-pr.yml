@@ -27,34 +27,45 @@ jobs:
       run: |
         git remote remove upstream || true
         git remote add upstream https://github.com/NotValra/RoValra.git
+        git fetch upstream
 
-    - name: Fetch upstream
-      run: git fetch upstream
-
-    - name: Delete upstream-update branch if exists
+    - name: Create branch from main
       run: |
-        git push origin --delete upstream-update || true
-        git branch -D upstream-update || true
+        git checkout -B upstream-update main
 
-    - name: Create upstream-update branch
+    - name: Merge upstream changes (ignore workflows)
       run: |
-        git checkout -b upstream-update
-        git merge upstream/main --allow-unrelated-histories -X theirs --squash
+        git merge upstream/main --allow-unrelated-histories -X theirs --no-commit || true
         git reset HEAD .github/workflows/*.yml
         git checkout -- .github/workflows/*.yml || true
+
+    - name: Check if there are any changes
+      id: check
+      run: |
+        if git diff --quiet; then
+          echo "no_changes=true" >> $GITHUB_OUTPUT
+        else
+          echo "no_changes=false" >> $GITHUB_OUTPUT
+        fi
+
+    - name: Commit changes
+      if: steps.check.outputs.no_changes == 'false'
+      run: |
         git commit -m "Merge updates from RoValra (excluding workflows)"
 
     - name: Push branch
+      if: steps.check.outputs.no_changes == 'false'
       run: git push origin upstream-update --force
 
     - name: Create Pull Request
+      if: steps.check.outputs.no_changes == 'false'
       uses: peter-evans/create-pull-request@v5
       with:
         token: ${{ secrets.GITHUB_TOKEN }}
         branch: upstream-update
         base: main
         title: "Updates from RoValra"
-        body: "This PR merges the latest changes from the original RoValra repository (workflow files ignored)."
+        body: "This PR merges the latest changes from the original RoValra repository."
         labels: "upstream"
         delete-branch: false
         merge-method: squash
