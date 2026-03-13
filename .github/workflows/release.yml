@@ -1,4 +1,4 @@
-name: Build and Package Only
+name: Build, Package, and Release
 
 on:
   push:
@@ -30,9 +30,23 @@ jobs:
           cd dist
           zip -r ../ronet-${{ github.ref_name }}.zip .
 
-      - name: Upload ZIP for Manual Download
-        uses: actions/upload-artifact@v4
+      - name: Create GitHub Release
+        id: create_release
+        uses: actions/create-release@v1
         with:
-          name: ronet-build-files
-          path: ronet-*.zip
-          retention-days: 5
+          tag_name: ${{ github.ref_name }}
+          release_name: Release ${{ github.ref_name }}
+          draft: false
+          prerelease: false
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Upload ZIP to Release
+        uses: actions/upload-release-asset@v1
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: ./ronet-${{ github.ref_name }}.zip
+          asset_name: ronet-${{ github.ref_name }}.zip
+          asset_content_type: application/zip
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
