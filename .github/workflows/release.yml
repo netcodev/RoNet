@@ -3,10 +3,14 @@ name: Build, Package, and Release
 on:
   workflow_dispatch:
     inputs:
-      release_tag:
-        description: "Tag for the release (e.g., v1.0.0)"
+      bump:
+        description: "Version bump type"
         required: true
-        default: "v0.0.0"
+        type: choice
+        options:
+          - major
+          - minor
+          - patch
 
 jobs:
   build-and-package:
@@ -20,6 +24,41 @@ jobs:
 
       - name: Fetch tags
         run: git fetch --tags
+
+      - name: Determine next version
+        run: |
+          LAST_TAG=$(git tag --sort=-v:refname | head -n 1)
+
+          if [ -z "$LAST_TAG" ]; then
+            LAST_TAG="v0.0.0"
+          fi
+
+          VERSION=${LAST_TAG#v}
+
+          IFS='.' read -r MAJOR MINOR PATCH <<< "$VERSION"
+
+          case "${{ github.event.inputs.bump }}" in
+            major)
+              MAJOR=$((MAJOR + 1))
+              MINOR=0
+              PATCH=0
+              ;;
+            minor)
+              MINOR=$((MINOR + 1))
+              PATCH=0
+              ;;
+            patch)
+              PATCH=$((PATCH + 1))
+              ;;
+          esac
+
+          NEW_TAG="v$MAJOR.$MINOR.$PATCH"
+
+          echo "LAST_TAG=$LAST_TAG" >> $GITHUB_ENV
+          echo "NEW_TAG=$NEW_TAG" >> $GITHUB_ENV
+
+          echo "Previous version: $LAST_TAG"
+          echo "New version: $NEW_TAG"
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
@@ -36,36 +75,21 @@ jobs:
       - name: Package extension
         run: |
           cd dist
-          zip -r ../ronet-${{ github.event.inputs.release_tag }}.zip .
-
-      - name: Get previous release tag
-        run: |
-          PREV_TAG=$(git tag --sort=-creatordate | sed -n '2p')
-          echo "PREV_TAG=$PREV_TAG" >> $GITHUB_ENV
-          echo "Previous tag: $PREV_TAG"
+          zip -r ../ronet-${{ env.NEW_TAG }}.zip .
 
       - name: Generate changelog
         run: |
-          if [ -z "$PREV_TAG" ]; then
-            RANGE="HEAD"
-            COMPARE_URL=""
-          else
-            RANGE="$PREV_TAG..HEAD"
-            COMPARE_URL="https://github.com/${{ github.repository }}/compare/$PREV_TAG...${{ github.event.inputs.release_tag }}"
-          fi
-
-          echo "Generating changelog for range: $RANGE"
+          RANGE="${{ env.LAST_TAG }}..HEAD"
+          COMPARE_URL="https://github.com/${{ github.repository }}/compare/${{ env.LAST_TAG }}...${{ env.NEW_TAG }}"
 
           {
-            echo "# Release ${{ github.event.inputs.release_tag }}"
+            echo "# Release ${{ env.NEW_TAG }}"
             echo ""
-
-            if [ -n "$PREV_TAG" ]; then
-              echo "**Previous release:** $PREV_TAG"
-              echo ""
-              echo "**Full Changelog:** $COMPARE_URL"
-              echo ""
-            fi
+            echo "Previous release: ${{ env.LAST_TAG }}"
+            echo ""
+            echo "Full Changelog:"
+            echo "$COMPARE_URL"
+            echo ""
 
             echo "---"
             echo ""
@@ -73,7 +97,7 @@ jobs:
             echo ""
 
             git log $RANGE \
-              --pretty=format:"- %s (%h) — %an" \
+              --pretty=format:"- %s (%h) - %an" \
               --no-merges
 
             echo ""
@@ -96,17 +120,13 @@ jobs:
 
           } > changelog.txt
 
-          echo "CHANGELOG<<EOF" >> $GITHUB_ENV
-          cat changelog.txt >> $GITHUB_ENV
-          echo "EOF" >> $GITHUB_ENV
-
       - name: Create GitHub Release
         id: create_release
         uses: actions/create-release@v1
         with:
-          tag_name: ${{ github.event.inputs.release_tag }}
-          release_name: Release ${{ github.event.inputs.release_tag }}
-          body: ${{ env.CHANGELOG }}
+          tag_name: ${{ env.NEW_TAG }}
+          release_name: Release ${{ env.NEW_TAG }}
+          body_path: changelog.txt
           draft: false
           prerelease: false
         env:
@@ -116,8 +136,8 @@ jobs:
         uses: actions/upload-release-asset@v1
         with:
           upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: ./ronet-${{ github.event.inputs.release_tag }}.zip
-          asset_name: ronet-${{ github.event.inputs.release_tag }}.zip
+          asset_path: ./ronet-${{ env.NEW_TAG }}.zip
+          asset_name: ronet-${{ env.NEW_TAG }}.zip
           asset_content_type: application/zip
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
