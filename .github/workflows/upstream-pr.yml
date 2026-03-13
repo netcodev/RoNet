@@ -27,7 +27,7 @@ jobs:
     - name: Create update branch
       run: |
         git checkout -b upstream-update
-        git merge upstream/main --no-commit || true
+        git merge upstream/main --allow-unrelated-histories --no-commit || true
 
     - name: Push branch
       run: git push https://x-access-token:${{ secrets.UPSTREAM_PAT }}@github.com/netcodev/RoNet.git upstream-update --force
