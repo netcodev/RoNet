@@ -12,6 +12,8 @@ jobs:
     steps:
     - name: Checkout repo
       uses: actions/checkout@v3
+      with:
+        fetch-depth: 0
 
     - name: Configure git
       run: |
@@ -19,18 +21,22 @@ jobs:
         git config user.email "github-actions[bot]@users.noreply.github.com"
 
     - name: Add upstream
-      run: git remote add upstream https://github.com/NotValra/RoValra.git
+      run: |
+        git remote remove upstream || true
+        git remote add upstream https://github.com/NotValra/RoValra.git
 
     - name: Fetch upstream
       run: git fetch upstream
 
-    - name: Create update branch
+    - name: Create/update upstream-update branch
       run: |
-        git checkout -b upstream-update
-        git merge upstream/main --allow-unrelated-histories --no-commit || true
+        git checkout -B upstream-update
+        # Merge upstream/main, auto-resolve conflicts in favour of upstream
+        git merge upstream/main --allow-unrelated-histories -X theirs -m "Merge updates from RoValra"
 
     - name: Push branch
-      run: git push https://${{ secrets.GITHUB_TOKEN }}@github.com/netcodev/RoNet.git upstream-update --force
+      run: |
+        git push https://${{ secrets.GITHUB_TOKEN }}@github.com/netcodev/RoNet.git upstream-update --force
 
     - name: Create Pull Request
       uses: peter-evans/create-pull-request@v5
@@ -42,3 +48,4 @@ jobs:
         title: "Updates from RoValra"
         body: "This PR merges the latest changes from the original RoValra repository."
         labels: "upstream"
+        delete-branch: false
