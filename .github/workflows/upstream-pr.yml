@@ -12,47 +12,48 @@ jobs:
   sync:
     runs-on: ubuntu-latest
     steps:
-    - name: Checkout your repo
-      uses: actions/checkout@v3
-      with:
-        fetch-depth: 0
+      - name: Checkout your repo
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
 
-    - name: Configure git
-      run: |
-        git config user.name "github-actions[bot]"
-        git config user.email "github-actions[bot]@users.noreply.github.com"
+      - name: Configure git
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
 
-    - name: Add upstream and fetch
-      run: |
-        git remote remove upstream || true
-        git remote add upstream https://github.com/NotValra/RoValra.git
-        git fetch upstream main
+      - name: Add upstream and fetch
+        run: |
+          git remote remove upstream || true
+          git remote add upstream https://github.com/NotValra/RoValra.git
+          git fetch upstream main
 
-    - name: Create PR branch from scratch
-      run: |
-        git checkout --orphan upstream-update
-        git rm -rf .
-        git clean -fdx
+      - name: Create PR branch from scratch
+        run: |
+          git checkout --orphan upstream-update
+          git rm -rf .
+          git clean -fdx
 
-    - name: Pull all upstream files (excluding workflows)
-      run: |
-        git checkout upstream/main -- .
-        # Add all files except workflow files
-        git add $(git ls-files | grep -v '^.github/workflows/')
-        # Commit only if there are changes
-        git diff --cached --quiet || git commit -m "Sync updates from RoValra (excluding workflows)"
+      - name: Pull all upstream files (excluding workflows)
+        run: |
+          git checkout upstream/main -- .
+          # Remove workflow files completely from working tree
+          rm -f .github/workflows/*.yml
+          git add -A
+          # Commit only if there are any changes
+          git diff --cached --quiet || git commit -m "Sync updates from RoValra (excluding workflows)"
 
-    - name: Push PR branch
-      run: git push origin upstream-update --force
+      - name: Push PR branch
+        run: git push origin upstream-update --force
 
-    - name: Create Pull Request
-      uses: peter-evans/create-pull-request@v5
-      with:
-        token: ${{ secrets.GITHUB_TOKEN }}
-        branch: upstream-update
-        base: main
-        title: "Sync updates from RoValra"
-        body: "This PR restores missing files and updates from the original RoValra repository (workflow files ignored). Review each change before merging."
-        labels: "upstream"
-        delete-branch: false
-        merge-method: squash
+      - name: Create Pull Request
+        uses: peter-evans/create-pull-request@v5
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          branch: upstream-update
+          base: main
+          title: "Sync updates from RoValra"
+          body: "This PR restores missing files and updates from the original RoValra repository (workflow files ignored). Review each change before merging."
+          labels: "upstream"
+          delete-branch: false
+          merge-method: squash
