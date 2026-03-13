@@ -1,0 +1,25 @@
+.ronet-pill {
+    display: inline-block;
+    padding: 4px 10px;
+    border-radius: 12px;
+    font-size: 12px;
+    font-weight: 600;
+    line-height: 1.5;
+    cursor: default;
+    align-self: flex-start; 
+}
+
+.ronet-pill.experimental {
+    background-color: rgb(2, 170, 81);
+    color: #FFFFFF;
+}
+
+.ronet-pill.beta {
+    background-color: rgb(51, 95, 255);
+    color: #FFFFFF;
+}
+
+.ronet-pill.deprecated {
+    background-color: rgb(220, 53, 69);
+    color: #FFFFFF;
+}
