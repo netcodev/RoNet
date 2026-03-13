@@ -1,5 +1,23 @@
 import { initializeObserver, startObserving } from './core/observer.js';
 import { detectTheme, dispatchThemeEvent } from './core/theme.js';
+
+// Global safeguard for extension reload/unload race conditions
+window.addEventListener('error', (event) => {
+  const msg = event.error?.message || event.message || '';
+  if (typeof msg === 'string' && msg.includes('Extension context invalidated')) {
+    event.preventDefault();
+    return false;
+  }
+});
+
+window.addEventListener('unhandledrejection', (event) => {
+  const msg = event.reason?.message || event.reason || '';
+  if (typeof msg === 'string' && msg.includes('Extension context invalidated')) {
+    event.preventDefault();
+    return false;
+  }
+});
+
 // --- Feature Imports --- //
 // Site wide
 import { init as initOnboarding } from './features/onboarding/onboarding.js';

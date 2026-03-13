@@ -671,7 +671,29 @@ function manageSingletonExecution() {
 
     const resetLoop = (nextFn) => {
         if (timerId) clearInterval(timerId);
+
+        if (destroyed) {
+            timerId = null;
+            return;
+        }
+
         timerId = setInterval(nextFn, INTERVAL);
+    };
+
+    const handleContextInvalidated = (error) => {
+        if (!error) return false;
+
+        if (error.message?.includes('Extension context invalidated')) {
+            destroyed = true;
+            if (timerId) {
+                clearInterval(timerId);
+                timerId = null;
+            }
+            return true;
+        }
+
+        console.warn('RoNet singleton error:', error);
+        return false;
     };
 
     const attemptToBecomeLeader = () => {
@@ -680,11 +702,35 @@ function manageSingletonExecution() {
         isLeader = true;
         const info = { [KEYS.ID]: instanceId, [KEYS.SEEN]: Date.now() };
 
-        chrome.storage.local.set(info, () => {
-            if (destroyed || chrome.runtime?.lastError) return;
-            toggleFeatures(true);
-            resetLoop(renewLease);
-        });
+        try {
+            chrome.storage.local.set(info, () => {
+                try {
+                    if (destroyed) return;
+
+                    if (chrome.runtime?.lastError) {
+                        if (chrome.runtime.lastError.message?.includes('Extension context invalidated')) {
+                            destroyed = true;
+                            clearInterval(timerId);
+                            timerId = null;
+                        }
+                        return;
+                    }
+
+                    toggleFeatures(true);
+                    resetLoop(renewLease);
+                } catch (error) {
+                    if (handleContextInvalidated(error)) {
+                        return;
+                    }
+                    return;
+                }
+            });
+        } catch (error) {
+            if (handleContextInvalidated(error)) {
+                return;
+            }
+            return;
+        }
     };
 
     const renewLease = () => {
@@ -701,36 +747,99 @@ function manageSingletonExecution() {
             return;
         }
 
-        chrome.storage.local.get(KEYS.ID, (result) => {
-            if (destroyed || chrome.runtime?.lastError) {
+        try {
+            chrome.storage.local.get(KEYS.ID, (result) => {
+                if (destroyed) return;
+
+                if (chrome.runtime?.lastError) {
+                    if (chrome.runtime.lastError.message?.includes('Extension context invalidated')) {
+                        destroyed = true;
+                        clearInterval(timerId);
+                        timerId = null;
+                        return;
+                    }
+                    return;
+                }
+
+                if (result[KEYS.ID] !== instanceId) {
+                    isLeader = false;
+                    toggleFeatures(false);
+                    resetLoop(checkForLeader);
+                } else {
+                    try {
+                        chrome.storage.local.set({ [KEYS.SEEN]: Date.now() }, () => {
+                            try {
+                                if (destroyed) return;
+
+                                if (chrome.runtime?.lastError) {
+                                    if (chrome.runtime.lastError.message?.includes('Extension context invalidated')) {
+                                        destroyed = true;
+                                        clearInterval(timerId);
+                                        timerId = null;
+                                    }
+                                    return;
+                                }
+                            } catch (error) {
+                                if (handleContextInvalidated(error)) {
+                                    return;
+                                }
+                                return;
+                            }
+                        });
+                    } catch (error) {
+                        if (handleContextInvalidated(error)) {
+                            return;
+                        }
+                        return;
+                    }
+                }
+            });
+        } catch (error) {
+            if (handleContextInvalidated(error)) {
                 return;
             }
-
-            if (result[KEYS.ID] !== instanceId) {
-                isLeader = false;
-                toggleFeatures(false);
-                resetLoop(checkForLeader);
-            } else {
-                chrome.storage.local.set({ [KEYS.SEEN]: Date.now() }, () => {
-                    if (destroyed || chrome.runtime?.lastError) return;
-                });
-            }
-        });
+            return;
+        }
     };
 
     const checkForLeader = () => {
         if (destroyed) return;
 
-        chrome.storage.local.get([KEYS.ID, KEYS.SEEN], (result) => {
-            if (destroyed || chrome.runtime?.lastError) return;
+        try {
+            chrome.storage.local.get([KEYS.ID, KEYS.SEEN], (result) => {
+                try {
+                    if (destroyed) return;
 
-            const lastSeen = result[KEYS.SEEN];
-            const isLeaseActive = lastSeen && Date.now() - lastSeen < LEASE;
+                    if (chrome.runtime?.lastError) {
+                        // context invalidated can manifest here; stop running
+                        if (chrome.runtime.lastError.message?.includes('Extension context invalidated')) {
+                            destroyed = true;
+                            clearInterval(timerId);
+                            timerId = null;
+                            return;
+                        }
+                        return;
+                    }
 
-            if (!result[KEYS.ID] || !isLeaseActive) {
-                attemptToBecomeLeader();
+                    const lastSeen = result[KEYS.SEEN];
+                    const isLeaseActive = lastSeen && Date.now() - lastSeen < LEASE;
+
+                    if (!result[KEYS.ID] || !isLeaseActive) {
+                        attemptToBecomeLeader();
+                    }
+                } catch (error) {
+                    if (handleContextInvalidated(error)) {
+                        return;
+                    }
+                    return;
+                }
+            });
+        } catch (error) {
+            if (handleContextInvalidated(error)) {
+                return;
             }
-        });
+            return;
+        }
     };
 
     window.addEventListener('beforeunload', () => {
