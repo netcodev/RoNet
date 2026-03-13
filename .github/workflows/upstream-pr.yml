@@ -37,10 +37,9 @@ jobs:
     - name: Pull all upstream files (excluding workflows)
       run: |
         git checkout upstream/main -- .
-        # Remove workflow files from staging
-        git reset .github/workflows/*.yml || true
-        git checkout -- .github/workflows/*.yml || true
-        git add -A
+        # Add all files except workflow files
+        git add $(git ls-files | grep -v '^.github/workflows/')
+        # Commit only if there are changes
         git diff --cached --quiet || git commit -m "Sync updates from RoValra (excluding workflows)"
 
     - name: Push PR branch
@@ -53,7 +52,7 @@ jobs:
         branch: upstream-update
         base: main
         title: "Sync updates from RoValra"
-        body: "This PR restores missing files and updates from the original RoValra repository. Review each change before merging."
+        body: "This PR restores missing files and updates from the original RoValra repository (workflow files ignored). Review each change before merging."
         labels: "upstream"
         delete-branch: false
         merge-method: squash
