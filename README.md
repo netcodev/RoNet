@@ -6,10 +6,6 @@
   <strong>RoNet</strong> is a fork of the browser extension RoValra
 </p>
 
-<p align="center">
-  <a href="https://netcodev.ftnick.site/ronet"><strong>Official Website</strong></a>
-</p>
-
 ---
 
 <details>
