@@ -29,35 +29,21 @@ jobs:
         git remote add upstream https://github.com/NotValra/RoValra.git
         git fetch upstream main
 
-    - name: Create branch from main
+    - name: Create/update branch from main
       run: git checkout -B upstream-update main
 
-    - name: Merge upstream changes (ignore workflows)
+    - name: Merge upstream changes (excluding workflows)
       run: |
         git merge upstream/main --allow-unrelated-histories -X theirs --no-commit || true
         git reset HEAD .github/workflows/*.yml
         git checkout -- .github/workflows/*.yml || true
         git add -A
-
-    - name: Check if there are any changes
-      id: check
-      run: |
-        if git diff --quiet; then
-          echo "no_changes=true" >> $GITHUB_OUTPUT
-        else
-          echo "no_changes=false" >> $GITHUB_OUTPUT
-        fi
-
-    - name: Commit changes
-      if: steps.check.outputs.no_changes == 'false'
-      run: git commit -m "Merge updates from RoValra (excluding workflows)"
+        git commit -m "Merge updates from RoValra (excluding workflows)" || echo "No changes to commit"
 
     - name: Push branch
-      if: steps.check.outputs.no_changes == 'false'
       run: git push origin upstream-update --force
 
     - name: Create Pull Request
-      if: steps.check.outputs.no_changes == 'false'
       uses: peter-evans/create-pull-request@v5
       with:
         token: ${{ secrets.GITHUB_TOKEN }}
