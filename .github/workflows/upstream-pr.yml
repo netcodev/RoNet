@@ -31,17 +31,21 @@ jobs:
     - name: Fetch upstream
       run: git fetch upstream
 
-    - name: Create/update upstream-update branch
+    - name: Delete upstream-update branch if exists
       run: |
-        git checkout -B upstream-update
+        git push origin --delete upstream-update || true
+        git branch -D upstream-update || true
+
+    - name: Create upstream-update branch
+      run: |
+        git checkout -b upstream-update
         git merge upstream/main --allow-unrelated-histories -X theirs --squash
         git reset HEAD .github/workflows/*.yml
         git checkout -- .github/workflows/*.yml || true
         git commit -m "Merge updates from RoValra (excluding workflows)"
 
     - name: Push branch
-      run: |
-        git push origin upstream-update --force
+      run: git push origin upstream-update --force
 
     - name: Create Pull Request
       uses: peter-evans/create-pull-request@v5
