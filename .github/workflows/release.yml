@@ -8,9 +8,9 @@ on:
         required: true
         type: choice
         options:
-          - major
-          - minor
           - patch
+          - minor
+          - major
 
 jobs:
   build-and-package:
@@ -77,56 +77,17 @@ jobs:
           cd dist
           zip -r ../ronet-${{ env.NEW_TAG }}.zip .
 
-      - name: Generate changelog
+      - name: Generate release body
         run: |
-          RANGE="${{ env.LAST_TAG }}..HEAD"
-          COMPARE_URL="https://github.com/${{ github.repository }}/compare/${{ env.LAST_TAG }}...${{ env.NEW_TAG }}"
-
-          {
-            echo "# Release ${{ env.NEW_TAG }}"
-            echo ""
-            echo "Previous release: ${{ env.LAST_TAG }}"
-            echo ""
-            echo "Full Changelog:"
-            echo "$COMPARE_URL"
-            echo ""
-
-            echo "---"
-            echo ""
-            echo "## Commits"
-            echo ""
-
-            git log $RANGE \
-              --pretty=format:"- %s (%h) - %an" \
-              --no-merges
-
-            echo ""
-            echo ""
-            echo "---"
-            echo ""
-            echo "## Changes"
-            echo ""
-            echo '```'
-            git diff --stat $RANGE
-            echo '```'
-            echo ""
-            echo ""
-            echo "## Detailed Commit Log"
-            echo ""
-
-            git log $RANGE \
-              --pretty=format:"- %h | %ad | %an | %s" \
-              --date=short
-
-          } > changelog.txt
+          echo "https://github.com/${{ github.repository }}/compare/${{ env.LAST_TAG }}...${{ env.NEW_TAG }}" >> release.txt
 
       - name: Create GitHub Release
         id: create_release
         uses: actions/create-release@v1
         with:
           tag_name: ${{ env.NEW_TAG }}
-          release_name: Release ${{ env.NEW_TAG }}
-          body_path: changelog.txt
+          release_name: Release ${{ env.NEW_TAG }} (${{ github.event.inputs.bump }})
+          body_path: release.txt
           draft: false
           prerelease: false
         env:
