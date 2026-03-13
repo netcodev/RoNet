@@ -6,13 +6,15 @@
   "scripts": {
     "build": "npm run clean && node build.js",
     "clean": "rimraf dist",
-    "lint": "eslint ."
+    "lint": "eslint .",
+    "postinstall": "patch-package"
   },
   "devDependencies": {
     "esbuild": "^0.27.3",
     "eslint": "10.0.2",
     "eslint-config-prettier": "^10.1.8",
     "globals": "^17.4.0",
+    "patch-package": "^8.0.1",
     "prettier": "^3.8.1",
     "prettier-eslint": "^16.4.2",
     "rimraf": "^6.1.3",
