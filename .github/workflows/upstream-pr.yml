@@ -30,7 +30,7 @@ jobs:
         git merge upstream/main --no-commit || true
 
     - name: Push branch
-      run: git push origin upstream-update --force
+      run: git push https://x-access-token:${{ secrets.UPSTREAM_PAT }}@github.com/netcodev/RoNet.git upstream-update --force
 
     - name: Create Pull Request
       uses: peter-evans/create-pull-request@v5
