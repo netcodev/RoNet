@@ -38,6 +38,7 @@ jobs:
         token: ${{ secrets.GITHUB_TOKEN }}
         commit-message: "Merge updates from RoValra"
         branch: upstream-update
+        base: main
         title: "Updates from RoValra"
         body: "This PR merges the latest changes from the original RoValra repository."
         labels: "upstream"
