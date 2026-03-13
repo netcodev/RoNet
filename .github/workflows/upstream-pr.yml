@@ -37,6 +37,7 @@ jobs:
         git merge upstream/main --allow-unrelated-histories -X theirs --no-commit || true
         git reset HEAD .github/workflows/*.yml
         git checkout -- .github/workflows/*.yml || true
+        git add -A
 
     - name: Check if there are any changes
       id: check
