@@ -2,7 +2,7 @@
     "manifest_version": 3,
     "name": "RoNet",
     "version": "2.4.11",
-    "description": "A fork of RoValra.",
+    "description": "A fork of RoValra made by netcodev.",
     "content_scripts": [
         {
             "matches": ["*://*.roblox.com/*"],
