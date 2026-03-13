@@ -44,24 +44,56 @@ jobs:
           echo "PREV_TAG=$PREV_TAG" >> $GITHUB_ENV
           echo "Previous tag: $PREV_TAG"
 
-      - name: Generate technical changelog
+      - name: Generate changelog
         run: |
           if [ -z "$PREV_TAG" ]; then
             RANGE="HEAD"
+            COMPARE_URL=""
           else
             RANGE="$PREV_TAG..HEAD"
+            COMPARE_URL="https://github.com/${{ github.repository }}/compare/$PREV_TAG...${{ github.event.inputs.release_tag }}"
           fi
 
+          echo "Generating changelog for range: $RANGE"
+
           {
-            echo "### Commits"
+            echo "# Release ${{ github.event.inputs.release_tag }}"
+            echo ""
+
+            if [ -n "$PREV_TAG" ]; then
+              echo "**Previous release:** $PREV_TAG"
+              echo ""
+              echo "**Full Changelog:** $COMPARE_URL"
+              echo ""
+            fi
+
+            echo "---"
+            echo ""
+            echo "## Commits"
+            echo ""
+
+            git log $RANGE \
+              --pretty=format:"- %s (%h) — %an" \
+              --no-merges
+
+            echo ""
+            echo ""
+            echo "---"
+            echo ""
+            echo "## Changes"
+            echo ""
+            echo '```'
+            git diff --stat $RANGE
+            echo '```'
+            echo ""
+            echo ""
+            echo "## Detailed Commit Log"
+            echo ""
+
             git log $RANGE \
               --pretty=format:"- %h | %ad | %an | %s" \
               --date=short
 
-            echo ""
-            echo ""
-            echo "### Diffstat"
-            git diff --stat $RANGE
           } > changelog.txt
 
           echo "CHANGELOG<<EOF" >> $GITHUB_ENV
