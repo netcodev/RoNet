@@ -3,7 +3,7 @@
 </p>
 
 <p align="center">
-  <a href="https://netcodev.ftnick.site"><strong>netcodev Website</strong></a>
+  <a href="https://netcodev.ftnick.site/ronet"><strong>Website</strong></a>
 </p>
 
 ---
