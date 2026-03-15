@@ -11,7 +11,6 @@ export const BADGE_CONFIG = {
         userIds: [CREATOR_USER_ID],
         icon: assets.ronetIcon,
         tooltip: 'Creator of RoNet',
-        confetti: assets.ronetIcon,
         style: {},
         alwaysShow: true
     },
@@ -20,24 +19,13 @@ export const BADGE_CONFIG = {
         userIds: CONTRIBUTOR_USER_IDS,
         icon: assets.ronetIcon,
         tooltip: 'RoNet Contributor',
-        confetti: assets.ronetIcon,
         style: { filter: 'sepia(80%) saturate(300%) brightness(90%) hue-rotate(-20deg)' }
-    },
-    gilbert: {
-        type: 'badge',
-        userIds: [CREATOR_USER_ID],
-        icon: assets.ronetIcon,
-        name: 'Gilbert',
-        tooltip: 'Creator of RoNet',
-        confetti: assets.ronetIcon,
-        alwaysShow: true
     },
     legacy_donator: {
         type: 'header',
         userIds: [],
         icon: assets.ronetIcon,
         tooltip: 'Legacy Donator. Earned by donating to RoNet before donator badges were a thing.',
-        confetti: assets.ronetIcon,
         style: { filter: 'sepia(100%) saturate(600%) brightness(90%) hue-rotate(5deg)' }
     },
     donator_1: {

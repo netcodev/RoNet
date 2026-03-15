@@ -1,6 +1,5 @@
 import { observeElement } from '../../../core/observer.js';
 import { addTooltip } from '../../../core/ui/tooltip.js';
-import { createConfetti } from '../../../core/fun/confetti.js';
 import { BADGE_CONFIG } from '../../../core/configs/badges.js';
 import { callRobloxApiJson } from '../../../core/api.js';
 import { createSquareButton } from '../../../core/ui/profile/header/squarebutton.js';
@@ -25,10 +24,6 @@ function createHeaderBadge(parentContainer, badge) {
         cursor: 'pointer',
         ...badge.style
     });
-
-    if (badge.confetti) {
-        icon.addEventListener('click', () => createConfetti(icon, badge.confetti));
-    }
 
     if (badge.url) {
         icon.addEventListener('click', () => {
@@ -218,11 +213,7 @@ async function addProfileBadgeButtons(buttonContainer) {
                     paddingX: 'padding-x-small',
                     disableTextTruncation: true,
                     onClick: (event) => {
-                        if (badge.confetti) {
-                            createConfetti(event.currentTarget, badge.confetti);
-
-                            createRain(badge.icon);
-                        } 
+                        createRain(badge.icon);
                     }
                 });
 

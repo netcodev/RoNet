@@ -1,5 +1,5 @@
 diff --git a/node_modules/roavatar-renderer/dist/index.js b/node_modules/roavatar-renderer/dist/index.js
-index f630860..179f08a 100644
+index c79545d..c0f0f76 100644
 --- a/node_modules/roavatar-renderer/dist/index.js
 +++ b/node_modules/roavatar-renderer/dist/index.js
 @@ -16563,13 +16563,6 @@ if (typeof __THREE_DEVTOOLS__ !== "undefined") {
@@ -16,3 +16,161 @@ index f630860..179f08a 100644
  function WebGLAnimation() {
    let context = null;
    let isAnimating = false;
+@@ -29497,7 +29490,8 @@ class RBX {
+         }
+         break;
+       }
+-      case DataType.CFrame: {
++      case DataType.CFrame:
++      case 30: {
+         const cframes = [];
+         for (let i = 0; i < valuesLength; i++) {
+           const cframe = new CFrame();
+@@ -29612,6 +29606,15 @@ class RBX {
+         }
+         break;
+       }
++      // Some Roblox properties (like HistoryId) use type 31, which is an Int64-like value.
++      case 31: {
++        const nums = chunkView.readInterleaved32(valuesLength, false, "readInt64", 8);
++        for (let i = 0; i < nums.length; i++) {
++          nums[i] = untransformInt64(nums[i]);
++          prop.values.push(nums[i]);
++        }
++        break;
++      }
+       case DataType.Int64: {
+         const nums = chunkView.readInterleaved32(valuesLength, false, "readInt64", 8);
+         for (let i = 0; i < nums.length; i++) {
+@@ -30137,6 +30140,25 @@ class RBX {
+           referentToInstance.set(inst.referents[i], instance);
+         }
+       }
++      for (let i = 0; i < this.prnt.instanceCount; i++) {
++        const childReferent = this.prnt.childReferents[i];
++        const parentReferent = this.prnt.parentReferents[i];
++        const child = referentToInstance.get(childReferent);
++        const parent = referentToInstance.get(parentReferent);
++        if (!child) {
++          console.warn(`Child with referent ${childReferent} does not exist`);
++          continue;
++        }
++        if (!parent && parentReferent !== -1) {
++          console.warn(`Parent with referent ${parentReferent} does not exist`);
++          continue;
++        }
++        if (parentReferent !== -1) {
++          child.setParent(parent);
++        } else {
++          child.setParent(this.dataModel);
++        }
++      }
+       for (const prop of this.propArray) {
+         const inst = this.classIDtoINST.get(prop.classID);
+         for (let i = 0; i < inst.referents.length; i++) {
+@@ -30167,25 +30189,6 @@ class RBX {
+           }
+         }
+       }
+-      for (let i = 0; i < this.prnt.instanceCount; i++) {
+-        const childReferent = this.prnt.childReferents[i];
+-        const parentReferent = this.prnt.parentReferents[i];
+-        const child = referentToInstance.get(childReferent);
+-        const parent = referentToInstance.get(parentReferent);
+-        if (!child) {
+-          console.warn(`Child with referent ${childReferent} does not exist`);
+-          continue;
+-        }
+-        if (!parent && parentReferent !== -1) {
+-          console.warn(`Parent with referent ${parentReferent} does not exist`);
+-          continue;
+-        }
+-        if (parentReferent !== -1) {
+-          child.setParent(parent);
+-        } else {
+-          child.setParent(this.dataModel);
+-        }
+-      }
+       this.treeGenerated = true;
+     } else {
+       const xml = new DOMParser().parseFromString(this.xmlString, "text/xml");
+@@ -34718,7 +34721,7 @@ const API = {
+       }
+     },
+     GetRBX: async function(url, headers) {
+-      const fetchStr = url;
++      const fetchStr = typeof url === 'bigint' ? `https://www.roblox.com/asset/?id=${url}` : url;
+       let cacheStr = fetchStr;
+       if (headers) {
+         cacheStr += JSON.stringify(headers);
+@@ -52474,13 +52477,13 @@ class HumanoidDescriptionWrapper extends InstanceWrapper {
+         if (animationSetEntries) {
+           for (const subAnim of animationSetEntries) {
+             promises.push(new Promise((resolve) => {
+-              API.Asset.GetRBX(subAnim.id, void 0).then((result) => {
++              API.Asset.GetRBX(subAnim[1], void 0).then((result) => {
+                 if (result instanceof RBX) {
+                   const animTrackInstance = result.generateTree().GetChildren()[0];
+                   if (animTrackInstance && humanoid.parent) {
+                     const animTrack = new AnimationTrack().loadAnimation(humanoid.parent, animTrackInstance);
+                     animTrack.looped = true;
+-                    animatorW.data.animationTracks.set(BigInt(API.Misc.idFromStr(subAnim.id)), animTrack);
++                    animatorW.data.animationTracks.set(BigInt(subAnim[1]), animTrack);
+                     if (!animatorW.data.animationSet[animName]) {
+                       animatorW.data.animationSet[animName] = [];
+                     }
+@@ -57028,12 +57031,10 @@ class WrapLayerDesc {
+   cage;
+   cageOrigin;
+   autoSkin;
+-  importOrigin;
+   //temporary, order of array is used instead
+   order;
+   isSame(other) {
+-    const importOriginSame = this.importOrigin && other.importOrigin && this.importOrigin.isSame(other.importOrigin) || !this.importOrigin && !other.importOrigin;
+-    return this.reference === other.reference && this.referenceOrigin.isSame(other.referenceOrigin) && this.cage === other.cage && this.cageOrigin.isSame(other.cageOrigin) && this.autoSkin === other.autoSkin && importOriginSame;
++    return this.reference === other.reference && this.referenceOrigin.isSame(other.referenceOrigin) && this.cage === other.cage && this.cageOrigin.isSame(other.cageOrigin) && this.autoSkin === other.autoSkin;
+   }
+   constructor(reference, referenceOrigin, cage, cageOrigin) {
+     this.reference = reference;
+@@ -57175,9 +57176,6 @@ class ModelLayersDesc {
+         if (otherWrapLayer.HasProperty("AutoSkin")) {
+           underneathLayer.autoSkin = otherWrapLayer.Prop("AutoSkin");
+         }
+-        if (otherWrapLayer.HasProperty("ImportOrigin")) {
+-          underneathLayer.importOrigin = otherWrapLayer.Prop("ImportOrigin");
+-        }
+         underneathLayers.push(underneathLayer);
+       }
+     }
+@@ -57597,20 +57595,6 @@ class MeshDesc {
+             layerClothingChunked(mesh, ref_mesh, dist_mesh, layeredClothingCacheId);
+             break;
+         }
+-      } else {
+-        let totalOffset = this.layerDesc.cageOrigin.inverse();
+-        if (this.layerDesc.importOrigin) {
+-          totalOffset = totalOffset.multiply(this.layerDesc.importOrigin.inverse());
+-        }
+-        const rig = this.instance?.parent?.parent;
+-        if (rig) {
+-          const lowerTorso = rig.FindFirstChild("LowerTorso");
+-          if (lowerTorso) {
+-            const lowerTorsoSize = lowerTorso.PropOrDefault("Size", new Vector32());
+-            totalOffset = totalOffset.multiply(new CFrame(0, -lowerTorsoSize.Y, 0));
+-          }
+-        }
+-        offsetMesh(mesh, totalOffset);
+       }
+       the_ref_mesh = void 0;
+     }
+@@ -57771,9 +57755,6 @@ class MeshDesc {
+       if (wrapLayer.HasProperty("AutoSkin")) {
+         this.layerDesc.autoSkin = wrapLayer.Prop("AutoSkin");
+       }
+-      if (wrapLayer.HasProperty("ImportOrigin")) {
+-        this.layerDesc.importOrigin = wrapLayer.Prop("ImportOrigin");
+-      }
+       this.layerDesc.order = layerOrder;
+       this.modelLayersDesc = getModelLayersDesc(model);
+     } else if (wrapDeformer && wrapTarget) {

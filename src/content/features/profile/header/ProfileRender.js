@@ -178,7 +178,9 @@ async function loadRig(rigType) {
     outfit.playerAvatarType = rigType;
 
     const rigUrl = chrome.runtime.getURL(`assets/Rig${rigType}.rbxm`);
-    const rigResult = await API.Asset.GetRBX(rigUrl, undefined);
+    const response = await fetch(rigUrl);
+    const buffer = await response.arrayBuffer();
+    const rigResult = await API.Asset.GetRBX(buffer, 'rbxm');
 
     if (rigResult instanceof RBX) {
         currentRig = rigResult.generateTree().GetChildren()[0];

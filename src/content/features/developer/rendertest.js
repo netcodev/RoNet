@@ -77,7 +77,9 @@ async function renderAvatarPage(contentDiv) {
 
         const rigType = avatarData.playerAvatarType; 
         const rigUrl = chrome.runtime.getURL(`assets/Rig${rigType}.rbxm`);
-        const rigResult = await API.Asset.GetRBX(rigUrl, undefined);
+        const response = await fetch(rigUrl);
+        const buffer = await response.arrayBuffer();
+        const rigResult = await API.Asset.GetRBX(buffer, 'rbxm');
         
         if (rigResult instanceof RBX) {
             if (currentRig) currentRig.Destroy();
