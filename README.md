@@ -19,3 +19,8 @@
    * `manifest.json`
 
 </details>
+
+---
+
+## Credits
+- https://github.com/NotValra/RoValra/blob/main/README.md#credits
