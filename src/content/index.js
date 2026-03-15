@@ -1,3 +1,4 @@
+import './core/consoleMuffle.js';
 import { initializeObserver, startObserving } from './core/observer.js';
 import { detectTheme, dispatchThemeEvent } from './core/theme.js';
 
