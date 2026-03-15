@@ -2,7 +2,11 @@
 export function sanitizeString(str) {
     if (typeof str !== 'string') return str;
     
-    str = str.replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, '');
+    let previous;
+    do {
+        previous = str;
+        str = str.replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, '');
+    } while (str !== previous);
     
     str = str.replace(/on\w+\s*=\s*["'][^"']*["']/gi, '');
     str = str.replace(/on\w+\s*=\s*[^\s>]*/gi, '');
