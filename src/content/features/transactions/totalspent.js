@@ -1,4 +1,3 @@
-import { showReviewPopup } from '../../core/review/review.js';
 import { observeElement } from '../../core/observer.js';
 import { callRobloxApiJson } from '../../core/api.js';
 import { createOverlay } from '../../core/ui/overlay.js';
@@ -666,7 +665,6 @@ function onElementFound(container) {
             await animationController.waitUntilIdle();
             if (state.status === CALCULATION_STATE.RUNNING) {
                 state.status = CALCULATION_STATE.DONE;
-                showReviewPopup('totalspent');
             }
         } catch (error) {
             if (error instanceof PausedException) {

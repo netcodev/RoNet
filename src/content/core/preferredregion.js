@@ -1,6 +1,5 @@
 
 
-import { showReviewPopup } from './review/review.js';
 import { callRobloxApi } from './api.js';
 import { launchGame } from './utils/launcher.js';
 import { getUserLocation } from './utils/location.js'; 
@@ -202,7 +201,6 @@ export async function performJoinAction(placeId, universeId, preferredRegionCode
                                 subdomain: 'games',
                                 endpoint: `/v1/games/${placeId}/servers/Public?limit=100`
                             }).catch(()=>{/*fire and forget*/});
-                            showReviewPopup('region_filters');
                             joined = true;
                             break;
                         }
@@ -215,7 +213,6 @@ export async function performJoinAction(placeId, universeId, preferredRegionCode
                                 subdomain: 'games',
                                 endpoint: `/v1/games/${placeId}/servers/Public?limit=100`
                             }).catch(()=>{/*fire and forget*/});
-                            showReviewPopup('region_filters');
                             joined = true;
                             break;
                         }
@@ -276,7 +273,6 @@ export async function performJoinAction(placeId, universeId, preferredRegionCode
                         subdomain: 'games',
                         endpoint: `/v1/games/${placeId}/servers/Public?limit=100`
                     }).catch(()=>{/*fire and forget*/});
-                    showReviewPopup('region_filters');
                 }
             }
             else if (bestServerFoundSoFar) {
@@ -288,7 +284,6 @@ export async function performJoinAction(placeId, universeId, preferredRegionCode
                         subdomain: 'games',
                         endpoint: `/v1/games/${placeId}/servers/Public?limit=100`
                     }).catch(()=>{/*fire and forget*/});
-                    showReviewPopup('region_filters');
                 } else {
                     let foundRegionName = bestServerRegionCode;
                     try { foundRegionName = ClosestServer.getRegionName(bestServerRegionCode); } catch(e) {}
@@ -310,7 +305,6 @@ export async function performJoinAction(placeId, universeId, preferredRegionCode
                                     subdomain: 'games',
                                     endpoint: `/v1/games/${placeId}/servers/Public?limit=100`
                                 }).catch(()=>{/*fire and forget*/});
-                                showReviewPopup('region_filters');
                             } 
                         }
                     );

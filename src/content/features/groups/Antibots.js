@@ -1,4 +1,3 @@
-import { showReviewPopup } from '../../core/review/review.js';
 import { observeElement } from '../../core/observer.js';
 import { callRobloxApiJson } from '../../core/api.js';
 import { createRadioButton } from '../../core/ui/general/radio.js';
@@ -274,10 +273,6 @@ async function processMembers(actionType) {
     if(cancelBtn) {
         cancelBtn.textContent = 'Close';
         cancelBtn.style.display = 'block'; 
-    }
-    
-    if (successCount > 0) {
-        showReviewPopup('antibots');
     }
 
     updateActionCount();

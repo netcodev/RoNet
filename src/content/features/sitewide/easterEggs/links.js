@@ -56,12 +56,7 @@ export function init() {
         if (result.eastereggslinksEnabled) {
             const path = window.location.pathname;
             const redirects = {
-                '/cats': handleCatsPage,
-                '/fishstrap': () => window.location.href = 'https://fishstrap.app',
-                '/ronet': () => window.location.href = 'https://rovalra.com',
-                '/roseal': () => window.location.href = 'https://www.roseal.live',
-                '/rokitty': () => window.location.href = 'https://www.rokitty.app',
-                '/roqol': () => window.location.href = 'https://roqol.io/',
+                '/cats': handleCatsPage
             };
         
             if (redirects[path]) {

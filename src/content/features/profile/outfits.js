@@ -1,4 +1,3 @@
-import { showReviewPopup } from '../../core/review/review.js';
 import { observeElement, observeResize } from '../../core/observer.js';
 import { callRobloxApi } from '../../core/api.js';
 import { getUserIdFromUrl } from '../../core/idExtractor.js';
@@ -830,7 +829,6 @@ export function init() {
             }
 
             const clickHandler = async (event) => {
-                showReviewPopup('outfits');
                 const displayNameElement = document.querySelector(
                     '#profile-header-title-container-name',
                 );

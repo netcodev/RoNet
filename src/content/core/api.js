@@ -18,6 +18,8 @@ document.addEventListener('ronet-traffic-capture', (e) => {
         const hostname = urlObj.hostname;
         const pathname = urlObj.pathname + urlObj.search;
         
+        console.debug(`RoNet API Capture: ${method} ${hostname}${pathname}`);
+
         let subdomain = 'apis';
         let isRonetApi = false;
 
